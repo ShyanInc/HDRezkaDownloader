@@ -20,7 +20,7 @@ class Search:
 
     def __str__(self):
         s = ''
-        for i, title in zip(range(1, len(self.titles_list) + 1), self.titles_list):
+        for title in self.titles_list:
             s += (f'{title["id"]} - Название: {title["name"]} | Год: {title["info"]["year"]} | '
                   f'Страна: {title["info"]["country"]} | Жанр: {title["info"]["genre"]}\n')
         return s[:-1]
