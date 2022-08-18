@@ -41,3 +41,8 @@ class Search:
                                     .text.split(',')[2]},
                                      'data-id': title['data-id'],
                                      'url': title.select_one('div > a')['href']})
+
+    def get_url(self) -> str:
+        print(self.__str__())
+        id = int(input('Enter title number: '))
+        return self.titles_list[id - 1]['url']
