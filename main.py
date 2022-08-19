@@ -1,6 +1,8 @@
 from HDRezkaAPI import *
 
-url = Search('игра престолов').get_url()
-print(MovieInfo(url))
+search_text = input('Поиск: ')
 
-# print(Search('кухня'))
+movie_data = Search(search_text).get_data()
+download_data = MovieInfo(movie_data).get_data()
+
+Download(download_data).download_season(1)

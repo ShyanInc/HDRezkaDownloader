@@ -6,11 +6,11 @@ class Search:
     def __init__(self, search_text: str):
         self.url = 'https://rezka.ag/search/'
         self.search_text = search_text
-        self.search_response = Request(self.url).get_page(params={'do': 'search',
-                                                                  'subaction': 'search',
-                                                                  'q': self.search_text}
-                                                          ).content
-        self.search_data = BeautifulSoup(self.search_response, 'html.parser')
+        search_response = Request().get(self.url, params={'do': 'search',
+                                                          'subaction': 'search',
+                                                          'q': self.search_text}
+                                        ).content
+        self.search_data = BeautifulSoup(search_response, 'html.parser')
         self.results = self.search_data.select('div.b-content__inline_item')
         self.titles_list = []
         self.__get_info()
@@ -21,13 +21,13 @@ class Search:
     def __str__(self):
         s = ''
         for title in self.titles_list:
-            s += (f'{title["id"]} - Название: {title["name"]} | Год: {title["info"]["year"]} | '
+            s += (f'{title["id"]} - [{title["info"]["type"]}] Название: {title["name"]} | Год: {title["info"]["year"]} | '
                   f'Страна: {title["info"]["country"]} | Жанр: {title["info"]["genre"]}\n')
         return s[:-1]
 
     def __get_info(self):
         for title in self.results:
-            self.titles_list.append({'id': len(self.titles_list)+1,
+            self.titles_list.append({'id': len(self.titles_list) + 1,
                                      'name': title.select_one('div.b-content__inline_item-link > a')
                                     .text,
                                      'info': {'type': title.select_one('div.b-content__inline_item-cover > a '
@@ -42,7 +42,7 @@ class Search:
                                      'data-id': title['data-id'],
                                      'url': title.select_one('div > a')['href']})
 
-    def get_url(self) -> str:
+    def get_data(self) -> str:
         print(self.__str__())
-        id = int(input('Enter title number: '))
-        return self.titles_list[id - 1]['url']
+        title_id = int(input('Enter title number: '))
+        return self.titles_list[title_id - 1]
