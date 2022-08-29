@@ -6,6 +6,16 @@ from .get_stream import GetStream
 from tqdm import tqdm
 
 
+class Error(Exception):
+    """Base class for other exceptions"""
+    pass
+
+
+class IncorrectEpisodeNumberException(Error):
+    """Raised when incorrect episode number was in input"""
+    pass
+
+
 class Download:
     def __init__(self, download_data):
         self.data = download_data
@@ -17,10 +27,13 @@ class Download:
     def download_season(self, season):
         if self.data['type'] == 'movie':
             return
-        if season > self.data['seasons_count']:
+        if season < 1 or season > self.data['seasons_count']:
+            # TODO Make new custom exception for incorrect season number and realize it
             return
+
         episodes_list = self.soup.find('ul', id=f'simple-episodes-list-{season}')
         episodes_count = len(episodes_list.findAll('li'))
+
         if self.data['translations_list']:
             translator_id = self.__get_translation()
         else:
@@ -29,22 +42,23 @@ class Download:
         for i in range(1, episodes_count + 1):
             self.download_episode(season, i, translator_id, True)
 
-        print('Скачивание успешно завершено!')
-
     def download_episode(self, season, episode, translator_id=None, multi_download=False):
         if self.data['type'] == 'movie':
             return
         if season > self.data['seasons_count']:
             return
+
         episodes_list = self.soup.find('ul', id=f'simple-episodes-list-{season}')
         episodes_count = len(episodes_list.findAll('li'))
-        if episode > episodes_count:
-            return
+
         if not multi_download:
             if self.data['translations_list']:
                 translator_id = self.__get_translation()
             else:
                 translator_id = self.__detect_translation()
+
+        if episode < 1 or episode > self.data['seasons_episodes_count'][season]:
+            raise IncorrectEpisodeNumberException
 
         data = {
             'id': self.data['data-id'],
@@ -55,29 +69,54 @@ class Download:
             'action': 'get_stream'
         }
 
-        url = GetStream().get_stream(data)
-        if url:
-            file_name = f"{self.data['name']} {season}s{episode}e.mp4"
-            fullpath = path.join(path.curdir, file_name)
+        stream_url = GetStream().get_series_stream(data)
+        file_name = f"{self.data['name']} {season}s{episode}e.mp4"
 
-            with Request().get(url, stream=True) as r, open(fullpath, "wb") as f, tqdm(
+        download_data = {
+            'stream_url': stream_url,
+            'file_name': file_name,
+        }
+
+        self.__download(download_data)
+
+    def download_movie(self):
+        if self.data['type'] == 'series':
+            return
+
+        data = {
+            'url': self.url
+        }
+
+        stream_url = GetStream().get_movie_stream(data)
+        # file_name = f"{self.data['name']}.mp4"
+        # TODO Fix file name bug
+        file_name = f"test.mp4"
+
+        download_data = {
+            'stream_url': stream_url,
+            'file_name': file_name,
+        }
+
+        self.__download(download_data)
+
+    @staticmethod
+    def __download(download_data):
+        if download_data['stream_url']:
+
+            fullpath = path.join(path.curdir, download_data['file_name'])
+
+            with Request().get(download_data['stream_url'], stream=True) as r, open(fullpath, "wb") as f, tqdm(
                     unit="B",
                     unit_scale=True,
                     unit_divisor=1024,
                     total=int(r.headers.get('content-length', 0)),
                     file=sys.stdout,
-                    desc=file_name
+                    desc=download_data['file_name']
             ) as progress:
                 for chunk in r.iter_content(chunk_size=4096):
                     if chunk:
                         datasize = f.write(chunk)
                         progress.update(datasize)
-        if not multi_download:
-            print('Скачивание успешно завершено!')
-
-    def download_movie(self):
-        if self.data['type'] == 'series':
-            return
 
     def __get_translation(self) -> int:
         for i, translation in zip(range(1, len(self.data['translations_list'])), self.data['translations_list']):

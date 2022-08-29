@@ -21,8 +21,8 @@ class MovieInfo:
         s += f'Год выпуска: {info["year"]}\n' \
              f'Страна:{info["country"]}\n' \
              f'Длительность: {info["duration"]}\n' \
-             f'Рейтинг IMDb - {info["rating_imdb"]}\n' \
-             f'Рейтинг Кинопоиск - {info["rating_kp"]}\n' \
+             f'Рейтинг IMDb - {info["rating"]["imdb"]}\n' \
+             f'Рейтинг Кинопоиск - {info["rating"]["kp"]}\n' \
              f'Жанр:'
         for i in info['genre']:
             s += f' {i}'
@@ -47,37 +47,63 @@ class MovieInfo:
             'year': self.data['info']['year'],
             'country': self.data['info']['country'],
             'seasons_count': len(self.soup.select('#simple-seasons-tabs > li')),
-            'rating_imdb': None,
-            'rating_kp': None,
+            'rating': {
+                'imdb': None,
+                'kp': None
+            },
             'duration': self.soup.find('td', itemprop='duration').text,
             'genre': [i.text for i in self.soup.findAll('span', itemprop='genre')],
             'translations_list': Translations(self.soup).get(),
             'data-id': self.data['data-id'],
             'url': self.url
         }
-        try:
-            rating_imdb = self.soup.select_one('span.b-post__info_rates.imdb > span').text
-            data.update({'rating_imdb': rating_imdb})
-        except AttributeError:
-            pass
-        try:
-            rating_kp = self.soup.select_one('span.b-post__info_rates.kp > span').text
-            data.update({'rating_kp': rating_kp})
-        except AttributeError:
-            pass
+
+        rating = self.__get_rating()
+        data.update({'rating': rating})
+
+        episodes_count = {}
+
+        for i in range(1, data['seasons_count'] + 1):
+            counter = len(self.soup.select(f'#simple-episodes-list-{i} > li'))
+            episodes_count.update({i: counter})
+
+        data.update({'seasons_episodes_count': episodes_count})
+
         return data
 
     def movie_info(self):
-        return {
+        data = {
             'type': 'movie',
             'name': self.data['name'],
             'year': self.data['info']['year'],
             'country': self.data['info']['country'],
+            'rating': {
+                'imdb': None,
+                'kp': None
+            },
             'duration': self.soup.find('td', itemprop='duration').text,
-            'rating_imdb': self.soup.select_one('span.b-post__info_rates.imdb > span').text,
-            'rating_kp': self.soup.select_one('span.b-post__info_rates.kp > span').text,
             'genre': [i.text for i in self.soup.findAll('span', itemprop='genre')],
             'translations_list': Translations(self.soup).get(),
             'data-id': self.data['data-id'],
             'url': self.url
+        }
+
+        rating = self.__get_rating()
+        data.update({'rating': rating})
+
+        return data
+
+    def __get_rating(self):
+        try:
+            rating_imdb = self.soup.select_one('span.b-post__info_rates.imdb > span').text
+        except AttributeError:
+            rating_imdb = None
+        try:
+            rating_kp = self.soup.select_one('span.b-post__info_rates.kp > span').text
+        except AttributeError:
+            rating_kp = None
+
+        return {
+            'imdb': rating_imdb,
+            'kp': rating_kp
         }
