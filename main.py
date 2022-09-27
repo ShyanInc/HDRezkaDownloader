@@ -16,7 +16,7 @@ downloader = Download(download_data)
 
 print(movie_info)
 
-download_type = int(input('1 - Скачать фильм\n2 - Скачать сезон сериала\n3 - Скачать эпизод сериала\n'
+download_type = int(input('1 - Скачать фильм\n2 - Скачать сезон сериала\n3 - Скачать эпизоды сериала\n'
                           'Выберите тип скачивания: '))
 if download_type == 1:
     downloader.download_movie()
@@ -30,14 +30,15 @@ elif download_type == 3:
     season = int(input('Введите номер сезона: '))
     episodes_count = download_data['seasons_episodes_count'][season]
     print(f'В данном сезоне количество эпизодов: {episodes_count}')
-    episode = int(input('Введите номер эпизода: '))
+    start = int(input('Введите стартовый эпизод: '))
+    end = int(input('Введите конечный эпизод: '))
     while not correct_episode:
         try:
-            downloader.download_episode(season, episode)
+            downloader.download_episodes(season, start, end)
             correct_episode = True
-        except IncorrectEpisodeNumberException:
-            print('Неверный номер эпизода!')
-            episode = int(input('Снова введите номер эпизода: '))
+        except EpisodeNumberIsOutOfRange:
+            print('Неверный диапазон!')
+            episode = int(input('Снова введите диапазон эпизодов: '))
     print('Скачивание успешно завершено!')
 else:
     print('Неверный тип скачивания!')

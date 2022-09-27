@@ -39,7 +39,8 @@ class GetStream:
         response = Request().get(data['url'])
 
         soup = BeautifulSoup(response.content, 'html.parser')
-        tmp = str(soup).split('sof.tv.initCDNMoviesEvents')[-1].split('default_quality')[0]
+        tmp = str(soup).split(
+            'sof.tv.initCDNMoviesEvents')[-1].split('default_quality')[0]
         encoded_stream_url = tmp.split('streams')[-1][3:-3]
 
         stream_url = ''
@@ -47,7 +48,8 @@ class GetStream:
         decoded = False
         while not decoded:
             try:
-                arr = self.decode_url(encoded_stream_url, separator="\/\/_\/\/").split(",")
+                arr = self.decode_url(encoded_stream_url,
+                                      separator="\/\/_\/\/").split(",")
                 # TODO Make quality select
                 stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
                 decoded = True

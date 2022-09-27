@@ -16,6 +16,11 @@ class IncorrectEpisodeNumberException(Error):
     pass
 
 
+class EpisodeNumberIsOutOfRange(Error):
+    """Raised when episode number is out of range of available episodes"""
+    pass
+
+
 class Download:
     def __init__(self, download_data):
         self.data = download_data
@@ -25,13 +30,12 @@ class Download:
         self.favs = self.soup.find('input', id='ctrl_favs').get('value')
 
     def download_season(self, season):
-        if self.data['type'] == 'movie':
-            return
         if season < 1 or season > self.data['seasons_count']:
             # TODO Make new custom exception for incorrect season number and realize it
             return
 
-        episodes_list = self.soup.find('ul', id=f'simple-episodes-list-{season}')
+        episodes_list = self.soup.find(
+            'ul', id=f'simple-episodes-list-{season}')
         episodes_count = len(episodes_list.findAll('li'))
 
         if self.data['translations_list']:
@@ -42,14 +46,31 @@ class Download:
         for i in range(1, episodes_count + 1):
             self.download_episode(season, i, translator_id, True)
 
+    def download_episodes(self, season, start, end):
+        if season < 1 or season > self.data['seasons_count']:
+            # TODO Make new custom exception for incorrect season number and realize it
+            return
+
+        episodes_list = self.soup.find(
+            'ul', id=f'simple-episodes-list-{season}')
+        episodes_count = len(episodes_list.findAll('li'))
+
+        if end > episodes_count or start < 0:
+            raise EpisodeNumberIsOutOfRange
+
+        if self.data['translations_list']:
+            translator_id = self.__get_translation()
+        else:
+            translator_id = self.__detect_translation()
+
+        for i in range(start, end + 1):
+            self.download_episode(season, i, translator_id, True)
+
     def download_episode(self, season, episode, translator_id=None, multi_download=False):
         if self.data['type'] == 'movie':
             return
         if season > self.data['seasons_count']:
             return
-
-        episodes_list = self.soup.find('ul', id=f'simple-episodes-list-{season}')
-        episodes_count = len(episodes_list.findAll('li'))
 
         if not multi_download:
             if self.data['translations_list']:
@@ -121,7 +142,8 @@ class Download:
     def __get_translation(self) -> int:
         for i, translation in zip(range(1, len(self.data['translations_list'])), self.data['translations_list']):
             print(f'{i} - {translation["name"]}')
-        translation_id = self.data['translations_list'][int(input("Введите номер озвучки: ")) - 1]['id']
+        translation_id = self.data['translations_list'][int(
+            input("Введите номер озвучки: ")) - 1]['id']
         return translation_id
 
     def __detect_translation(self):
