@@ -27,10 +27,8 @@ class GetStream:
                           'Попробуйте скачать используя VPN!')
                     exit(0)
                 arr = self.decode_url(r['url'], separator="//_//").split(",")
-                print(arr, "\n ,url")
-                # stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
-                stream_url = self.quality_select(arr)
-                search_text = input('Поиск: ')
+                stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                # stream_url = self.quality_select(arr)
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
                 print('Decoding error, trying again!')
@@ -52,8 +50,8 @@ class GetStream:
             try:
                 arr = self.decode_url(encoded_stream_url,
                                       separator="\/\/_\/\/").split(",")
-                # stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
-                stream_url = self.quality_select(arr)
+                stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                # stream_url = self.quality_select(arr)
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
                 print('Decoding error, trying again!')

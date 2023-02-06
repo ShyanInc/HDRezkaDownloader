@@ -33,10 +33,11 @@ class Download:
         response = Request().get(self.url)
         self.soup = BeautifulSoup(response.content, 'html.parser')
         self.favs = self.soup.find('input', id='ctrl_favs').get('value')
+        print(self.quality)
         if self.dorl == "pls":
             self.name = slugify(
                 self.data['name'], allow_unicode=True, lowercase=False)
-            self.filee = open(f"{self.name}.list", "w")
+            self.filee = open(f"{self.data['data-id']}-{self.name}.list", "w")
         if self.data['translations_list']:
             self.translator_id = self.__get_translation()
         else:
@@ -109,7 +110,7 @@ class Download:
         }
 
         stream_url = GetStream().get_series_stream(data)
-        downloaded_folder = slugify(
+        downloaded_folder = slugify(self.data['data-id'],
             self.data['name'], allow_unicode=True, lowercase=False)
         if self.dorl != "pls":
             os.makedirs(downloaded_folder, exist_ok=True)
@@ -171,9 +172,9 @@ class Download:
             print(i)
 
     def convert_to_pls(self):
-        input_file = self.filee.name
+        file_name = self.filee.name
         self.filee.close()
-        with open(input_file, 'r') as f:
+        with open(file_name, 'r') as f:
             url_list = [line.strip() for line in f]
         with open(f"{self.name}.pls", 'w') as f:
             f.write("[playlist]\n")
