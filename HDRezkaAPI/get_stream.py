@@ -22,13 +22,17 @@ class GetStream:
             try:
                 response = Request().post(request_url, data=data, params=params)
                 r = response.json()
+                print(r)
                 if r['success'] and not r['url']:
                     print('К сожалению, этот материал не доступен в вашем регионе! '
                           'Попробуйте скачать используя VPN!')
                     exit(0)
                 arr = self.decode_url(r['url'], separator="//_//").split(",")
-                # TODO Make quality select
-                stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                print(arr, "\n ,url")
+                # stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                stream_url = self.quality_select(arr)
+                print(stream_url)
+                search_text = input('Поиск: ')
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
                 print('Decoding error, trying again!')
@@ -50,13 +54,28 @@ class GetStream:
             try:
                 arr = self.decode_url(encoded_stream_url,
                                       separator="\/\/_\/\/").split(",")
-                # TODO Make quality select
-                stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                # stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                stream_url = self.quality_select(arr)
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
                 print('Decoding error, trying again!')
 
         return stream_url
+    
+    @staticmethod
+    def quality_select(arr):
+        input_list = arr
+        result = []
+        for item in input_list:
+            resolution, url = item.split("]")
+            if url.endswith(".mp4"):
+                result.append((resolution + "]", url.split(" or ")[1]))
+        list = result
+        for i in range(len(list)):
+            print(i+1, list[i][0])
+        stream_url = list[int(input("Введите номер : ")) - 1][1]
+        return stream_url
+
 
     @staticmethod
     def decode_url(data, separator):
