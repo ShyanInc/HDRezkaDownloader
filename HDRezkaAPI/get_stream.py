@@ -22,7 +22,6 @@ class GetStream:
             try:
                 response = Request().post(request_url, data=data, params=params)
                 r = response.json()
-                print(r)
                 if r['success'] and not r['url']:
                     print('К сожалению, этот материал не доступен в вашем регионе! '
                           'Попробуйте скачать используя VPN!')
@@ -31,7 +30,6 @@ class GetStream:
                 print(arr, "\n ,url")
                 # stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
                 stream_url = self.quality_select(arr)
-                print(stream_url)
                 search_text = input('Поиск: ')
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
