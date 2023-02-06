@@ -1,2 +1,2 @@
-# HDRezkaDownloader
+# HDRezkaTool
 
