@@ -13,9 +13,14 @@ movie_info = MovieInfo(movie_data)
 
 download_data = movie_info.get_data()
 
-dorl = input('PLS?')
+if 0:
+    dorl = input('PLS?')
+    quality = input("Введите качество: ")
+else:
+    dorl = "pls"
+    quality = "1080p]"
 
-downloader = Download(download_data, dorl)
+downloader = Download(download_data, dorl, quality)
 
 print(movie_info)
 
