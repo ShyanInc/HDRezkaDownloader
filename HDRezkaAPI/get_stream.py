@@ -27,8 +27,8 @@ class GetStream:
                           'Попробуйте скачать используя VPN!')
                     exit(0)
                 arr = self.decode_url(r['url'], separator="//_//").split(",")
-                stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
-                # stream_url = self.quality_select(arr)
+                # stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                stream_url = self.quality_select(arr, data['quality'])
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
                 print('Decoding error, trying again!')
@@ -50,8 +50,8 @@ class GetStream:
             try:
                 arr = self.decode_url(encoded_stream_url,
                                       separator="\/\/_\/\/").split(",")
-                stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
-                # stream_url = self.quality_select(arr)
+                # stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                stream_url = self.quality_select(arr, data['quality'])
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
                 print('Decoding error, trying again!')
@@ -59,18 +59,25 @@ class GetStream:
         return stream_url
     
     @staticmethod
-    def quality_select(arr):
+    def quality_select(arr, quality):
         input_list = arr
         result = []
+        num = None
         for item in input_list:
             resolution, url = item.split("]")
             if url.endswith(".mp4"):
                 result.append((resolution + "]", url.split(" or ")[1]))
-        list = result
-        for i in range(len(list)):
-            print(i+1, list[i][0])
-        stream_url = list[int(input("Введите номер : ")) - 1][1]
-        return stream_url
+        if len(quality) > 2:        
+            for item in input_list:
+                if quality in item:
+                    num = input_list.index(item)
+                else:
+                    num = -1
+        else:
+            num = -1
+        stream_url = result[num][1]
+        print(result[num][0], "\n")
+        return stream_url   
 
 
     @staticmethod

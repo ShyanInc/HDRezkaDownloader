@@ -25,15 +25,16 @@ class EpisodeNumberIsOutOfRange(Error):
 
 
 class Download:
-    def __init__(self, download_data, dorl):
+    def __init__(self, download_data, dorl, quality):
         self.data = download_data
+        self.quality = quality
         self.dorl = dorl
-        self.all = download_data['allepisodes']
+        if download_data['type'] != 'movie':
+            self.all = download_data['allepisodes']
         self.url = download_data['url']
         response = Request().get(self.url)
         self.soup = BeautifulSoup(response.content, 'html.parser')
         self.favs = self.soup.find('input', id='ctrl_favs').get('value')
-        print(self.quality)
         if self.dorl == "pls":
             self.name = slugify(
                 self.data['name'], allow_unicode=True, lowercase=False)
@@ -77,6 +78,7 @@ class Download:
             self.download_episode(season, i, True)
 
     def download_episodes(self, season, start, end):
+        print(season)
         if season < 1 or season > self.data['seasons_count']:
             # TODO Make new custom exception for incorrect season number and realize it
             return
@@ -106,9 +108,11 @@ class Download:
             'favs': self.favs,
             'season': season,
             'episode': episode,
-            'action': 'get_stream'
+            'action': 'get_stream',
+            'quality': self.quality
         }
-
+        
+        print(episode)
         stream_url = GetStream().get_series_stream(data)
         downloaded_folder = slugify(self.data['data-id'],
             self.data['name'], allow_unicode=True, lowercase=False)
@@ -131,11 +135,14 @@ class Download:
             return
 
         data = {
-            'url': self.url
+            'url': self.url,
+            'quality': self.quality
         }
 
         stream_url = GetStream().get_movie_stream(data)
-        file_name = f"{self.data['name']}.mp4"
+        mp4 = "mp4"
+        file_name = slugify(self.data['data-id'],
+            self.data['name'], mp4, allow_unicode=True, lowercase=False)
         # TODO Fix file name bug
         # file_name = f"test.mp4"
 
@@ -148,12 +155,11 @@ class Download:
 
     def __download(self, download_data):
         if download_data['stream_url']:
-            i = 0
             if self.dorl == "pls":
                 self.filee.write(download_data['stream_url'] + "\n")
 
-            elif self.data['type'] == 'series':
-                os.system(f"bomi {download_data['stream_url']}")
+                if self.data['type'] == 'movie':
+                    os.system(f"bomi {download_data['stream_url']}")
             else:
                 fullpath = path.join(path.curdir, download_data['file_name'])
 
@@ -169,7 +175,6 @@ class Download:
                         if chunk:
                             datasize = f.write(chunk)
                             progress.update(datasize)
-            print(i)
 
     def convert_to_pls(self):
         file_name = self.filee.name
