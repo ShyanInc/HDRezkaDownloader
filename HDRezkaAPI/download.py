@@ -1,9 +1,12 @@
 import sys
+import os
 from os import path
 from bs4 import BeautifulSoup
 from .request import Request
 from .get_stream import GetStream
 from tqdm import tqdm
+from slugify import slugify
+from pathlib import Path
 
 
 class Error(Exception):
@@ -91,7 +94,9 @@ class Download:
         }
 
         stream_url = GetStream().get_series_stream(data)
-        file_name = f"{self.data['name']} {season}s{episode}e.mp4"
+        downloaded_folder = slugify(self.data['name'], allow_unicode=True, lowercase=False)
+        os.makedirs(downloaded_folder, exist_ok=True)
+        file_name = f"{downloaded_folder}\\{season}s{episode}e.mp4"
 
         download_data = {
             'stream_url': stream_url,

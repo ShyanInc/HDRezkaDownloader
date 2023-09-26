@@ -16,6 +16,8 @@ class MovieInfo:
         info = self.get_data()
         if info['type'] == 'movie':
             s += f'Фильм | {info["name"]}\n'
+        elif info['type'] == 'Аниме':
+            s += f'Аниме | {info["name"]}\nКоличество сезонов: {info["seasons_count"]}\n'
         else:
             s += f'Сериал | {info["name"]}\nКоличество сезонов: {info["seasons_count"]}\n'
         s += f'Год выпуска: {info["year"]}\n' \
@@ -37,6 +39,10 @@ class MovieInfo:
             return self.series_info()
         elif 'films' in self.url:
             return self.movie_info()
+        elif 'cartoons' in self.url:
+            return self.series_info()
+        elif 'animation' in self.url:
+            return self.series_info()
         else:
             return 'Wrong link!'
 
