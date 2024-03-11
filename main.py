@@ -17,7 +17,7 @@ if 0:
     dorl = input('PLS?')
     quality = input("Введите качество: ")
 else:
-    dorl = "pls"
+    dorl = "d"
     quality = "1080p]"
 
 downloader = Download(download_data, dorl, quality)
@@ -28,14 +28,14 @@ if download_data['type'] == 'movie':
     downloader.download_movie()
     print('Скачивание успешно завершено!')
 else:
-    download_type = int(input('2 - Скачать сезон сериала\n3 - Скачать эпизоды сериала\n4 - Скачать сезонs сериала\n5 - Скачать сериал\n'
+    download_type = int(input('1 - Скачать сезон сериала\n2 - Скачать эпизоды сериала\n3 - Скачать сезонs сериала\n4 - Скачать сериал\n'
                             'Выберите тип скачивания: '))
 
-    if download_type == 2:
+    if download_type == 1:
         season = int(input('Введите номер сезона: '))   
         downloader.download_season(season)
         print('Скачивание успешно завершено!')
-    elif download_type == 3:
+    elif download_type == 2:
         correct_episode = False
         season = int(input('Введите номер сезона: '))
         episodes_count = download_data['seasons_episodes_count'][season]
@@ -50,7 +50,7 @@ else:
                 print('Неверный диапазон!')
                 episode = int(input('Снова введите диапазон эпизодов: '))
         print('Скачивание успешно завершено!')
-    elif download_type == 4:
+    elif download_type == 3:
         correct_season = False
         start = int(input('Enter the starting season number: '))
         end = int(input('Enter the ending season number: '))
@@ -63,7 +63,7 @@ else:
                 start = int(input('Enter the starting season number again: '))
                 end = int(input('Enter the ending season number again: '))
         print('Download successful!')
-    if download_type == 5:
+    if download_type == 4:
         downloader.download_all_serial()
         print('Скачивание успешно завершено!')
     if dorl == "pls":

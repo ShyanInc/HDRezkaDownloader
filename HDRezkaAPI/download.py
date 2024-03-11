@@ -41,6 +41,8 @@ class Download:
             self.filee = open(f"{self.data['data-id']}-{self.name}.list", "w")
         if self.data['translations_list']:
             self.translator_id = self.__get_translation()
+            # if download_data["seasons_episodes_count"] == 0:
+            #     self.translator_id = self.__get_translation()
         else:
             self.translator_id = self.__detect_translation()
 
@@ -115,7 +117,7 @@ class Download:
         print(episode)
         stream_url = GetStream().get_series_stream(data)
         downloaded_folder = slugify(self.data['data-id'],
-            self.data['name'], allow_unicode=True, lowercase=False)
+            self.name, allow_unicode=True, lowercase=False)
         if self.dorl != "pls":
             os.makedirs(downloaded_folder, exist_ok=True)
         season = str(season).zfill(2)
