@@ -35,10 +35,10 @@ class Download:
         response = Request().get(self.url)
         self.soup = BeautifulSoup(response.content, 'html.parser')
         self.favs = self.soup.find('input', id='ctrl_favs').get('value')
-        if self.dorl == "pls":
-            self.name = slugify(
+        self.name = slugify(self.data['data-id'],
                 self.data['name'], allow_unicode=True, lowercase=False)
-            self.filee = open(f"{self.data['data-id']}-{self.name}.list", "w")
+        if self.dorl == "pls":
+            self.filee = open(f"{self.name}.list", "w")
         if self.data['translations_list']:
             self.translator_id = self.__get_translation()
             # if download_data["seasons_episodes_count"] == 0:
@@ -116,8 +116,7 @@ class Download:
         
         print(episode)
         stream_url = GetStream().get_series_stream(data)
-        downloaded_folder = slugify(self.data['data-id'],
-            self.name, allow_unicode=True, lowercase=False)
+        downloaded_folder = self.name
         if self.dorl != "pls":
             os.makedirs(downloaded_folder, exist_ok=True)
         season = str(season).zfill(2)
@@ -143,20 +142,19 @@ class Download:
 
         stream_url = GetStream().get_movie_stream(data)
         mp4 = "mp4"
-        file_name = slugify(self.data['data-id'],
-            self.data['name'], mp4, allow_unicode=True, lowercase=False)
         # TODO Fix file name bug
         # file_name = f"test.mp4"
 
         download_data = {
             'stream_url': stream_url,
-            'file_name': file_name,
+            'file_name': self.name,
         }
 
         self.__download(download_data)
 
     def __download(self, download_data):
         if download_data['stream_url']:
+            print (download_data['file_name'])
             if self.dorl == "pls":
                 self.filee.write(download_data['stream_url'] + "\n")
 
