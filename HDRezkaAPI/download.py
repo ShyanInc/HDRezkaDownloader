@@ -4,9 +4,10 @@ from os import path
 from bs4 import BeautifulSoup
 from .request import Request
 from .get_stream import GetStream
+from .history import  History
 from tqdm import tqdm
 from slugify import slugify
-from pathlib import Path
+# from pathlib import Path
 
 
 class Error(Exception):
@@ -35,8 +36,8 @@ class Download:
         response = Request().get(self.url)
         self.soup = BeautifulSoup(response.content, 'html.parser')
         self.favs = self.soup.find('input', id='ctrl_favs').get('value')
-        self.name = slugify(self.data['data-id'],
-                self.data['name'], allow_unicode=True, lowercase=False)
+        id_and_name = f"{self.data['data-id']} {self.data['name']}"
+        self.name = slugify(id_and_name, allow_unicode=True, lowercase=False)
         if self.dorl == "pls":
             self.filee = open(f"{self.name}.list", "w")
         if self.data['translations_list']:
@@ -161,6 +162,7 @@ class Download:
                 if self.data['type'] == 'movie':
                     os.system(f"bomi {download_data['stream_url']}")
             else:
+                History().status = "run"
                 fullpath = path.join(path.curdir, download_data['file_name'])
 
                 with Request().get(download_data['stream_url'], stream=True) as r, open(fullpath, "wb") as f, tqdm(
@@ -175,6 +177,7 @@ class Download:
                         if chunk:
                             datasize = f.write(chunk)
                             progress.update(datasize)
+            History().status = "end"
 
     def convert_to_pls(self):
         file_name = self.filee.name
@@ -192,10 +195,15 @@ class Download:
             f.write("Version=2\n")
 
     def __get_translation(self) -> int:
-        for i, translation in zip(range(1, len(self.data['translations_list'])), self.data['translations_list']):
-            print(f'{i} - {translation["name"]}')
-        translation_id = self.data['translations_list'][int(
-            input("Введите номер озвучки: ")) - 1]['id']
+        if History().status == 'run':
+            translation_id = History().translator_id
+        else:
+            for i, translation in zip(range(1, len(self.data['translations_list'])), self.data['translations_list']):
+                print(f'{i} - {translation["name"]}')
+            translation_id = self.data['translations_list'][int(
+                input("Введите номер озвучки: ")) - 1]['id']
+        History().translator_id = translation_id
+
         return translation_id
 
     def __detect_translation(self):
