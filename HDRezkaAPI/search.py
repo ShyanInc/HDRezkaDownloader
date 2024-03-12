@@ -21,8 +21,7 @@ class Search:
     def __str__(self):
         s = ''
         for title in self.titles_list:
-            s += (f'{title["id"]} - [{title["info"]["type"]}] Название: {title["name"]} | Год: {title["info"]["year"]} | '
-                  f'Страна: {title["info"]["country"]} | Жанр: {title["info"]["genre"]}\n')
+            s += (f'{title["id"]} - [{title["info"]["type"]}] Название: {title["name"]} | Год: {title["info"]["year"]}\n')
         return s[:-1]
 
     def __get_info(self):
