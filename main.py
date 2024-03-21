@@ -3,6 +3,8 @@ from HDRezkaAPI import *
 if History().status == 'run' and input('Continue[yN]?') != "n":
     movie_data = History().movie_data
 else:
+    History().status = "end"
+
     search_text = input('Поиск: ')
     search_result = Search(search_text)
 
@@ -24,7 +26,7 @@ if 0:
     quality = input("Введите качество: ")
 else:
     dorl = "d"
-    quality = "1080p]"
+    quality = "1080"
 
 downloader = Download(download_data, dorl, quality)
 
@@ -43,7 +45,10 @@ else:
     History().download_type = download_type
 
     if download_type == 1:
-        season = int(input('Введите номер сезона: '))   
+        if History().status == 'run' and History().download_type == 1 and History().run_season !="":
+            season = History().run_season
+        else:
+            season = int(input('Введите номер сезона: '))   
         downloader.download_season(season)
         print('Скачивание успешно завершено!')
     elif download_type == 2:
@@ -55,7 +60,7 @@ else:
         end = episodes_count
         while not correct_episode:
             try:
-                downloader.download_episodes(season, start, end)
+                downloader.download_episodes(season, start)
                 correct_episode = True
             except EpisodeNumberIsOutOfRange:
                 print('Неверный диапазон!')
@@ -77,10 +82,8 @@ else:
     elif download_type == 4:
         downloader.download_all_serial()
         print('Скачивание успешно завершено!')
-    if dorl == "pls":
-         downloader.convert_to_pls()
-
-
-
     else:
         print('Неверный тип скачивания!')
+    if dorl == "pls":
+         downloader.convert_to_pls()
+    History().status = "end"

@@ -14,6 +14,8 @@ class History:
             self._download_type = data.get('download_type', {})
             self._translator_id = data.get('translator_id', '')
             self._status = data.get('status', '')
+            self._run_season = data.get('run_season', '')
+            self._run_episode = data.get('run_episode', '')
         except FileNotFoundError:
             self._movie_data = {}
             self._quality = ''
@@ -21,6 +23,8 @@ class History:
             self._download_type = {}
             self._translator_id = ''
             self._status = ''
+            self._run_season = ''
+            self._run_episode = ''
 
     def _save_data(self):
         data = {
@@ -29,7 +33,9 @@ class History:
             'dorl': self._dorl,
             'download_type': self._download_type,
             'translator_id': self._translator_id,
-            'status': self._status
+            'status': self._status,
+            'run_season': self._run_season,
+            'run_episode': self._run_episode
         }
         with open('history.json', 'w') as json_file:
             json.dump(data, json_file)
@@ -86,6 +92,24 @@ class History:
     @status.setter
     def status(self, value):
         self._status = value
+        self._save_data()
+
+    @property
+    def run_season(self):
+        return self._run_season
+
+    @run_season.setter
+    def run_season(self, value):
+        self._run_season = value
+        self._save_data()
+
+    @property
+    def run_episode(self):
+        return self._run_episode
+
+    @run_episode.setter
+    def run_episode(self, value):
+        self._run_episode = value
         self._save_data()
 
 

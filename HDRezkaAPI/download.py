@@ -6,8 +6,6 @@ from .request import Request
 from .get_stream import GetStream
 from .history import  History
 from tqdm import tqdm
-from slugify import slugify
-# from pathlib import Path
 
 
 class Error(Exception):
@@ -30,14 +28,12 @@ class Download:
         self.data = download_data
         self.quality = quality
         self.dorl = dorl
-        if download_data['type'] != 'movie':
-            self.all = download_data['allepisodes']
         self.url = download_data['url']
         response = Request().get(self.url)
         self.soup = BeautifulSoup(response.content, 'html.parser')
-        self.favs = self.soup.find('input', id='ctrl_favs').get('value')
-        id_and_name = f"{self.data['data-id']} {self.data['name']}"
-        self.name = slugify(id_and_name, allow_unicode=True, lowercase=False)
+        # self.favs = self.soup.find('input', id='ctrl_favs').get('value')
+        self.name = download_data['url'].split('/')[-1].split('.')[0]
+
         if self.dorl == "pls":
             self.filee = open(f"{self.name}.list", "w")
         if self.data['translations_list']:
@@ -53,10 +49,13 @@ class Download:
         seasons_count = self.data['seasons_count']
         while not correct_season:
             try:
-                for season in range(1, seasons_count + 1):
-                    episodes_count = self.data['seasons_episodes_count'][season]
-                    self.download_episodes(season, 1, episodes_count)
-                correct_season = True
+                if History().status == 'run' and History().run_season !="":
+                    season = History().run_season()
+                    self.download_seasons(season, seasons_count +1)
+                else:
+                    for season in range(1, seasons_count + 1):
+                        self.download_season(season)
+                    correct_season = True
             except EpisodeNumberIsOutOfRange:
                 print('Неверный диапазон эпизодов!')
         print('Скачивание успешно завершено!')
@@ -72,16 +71,20 @@ class Download:
             # TODO Make new custom exception for incorrect season number and realize it
             return
 
-        episodes_list = self.soup.find(
-            'ul', id=f'simple-episodes-list-{season}')
-        episodes_count = len(episodes_list.findAll('li'))
+        episodes_count = self.data['seasons_episodes_count'][season]
+        History().run_season = season
 
-        
-        for i in range(1, episodes_count + 1):
-            self.download_episode(season, i, True)
+        if History().status == 'run' and History().run_episode !="":
+            start = History( ).run_episode
+        else:
+            start = 1
 
-    def download_episodes(self, season, start, end):
+        for i in range(start, episodes_count + 1):
+            self.download_episode(season, i)
+
+    def download_episodes(self, season, start):
         print(season)
+        end = self.data['seasons_episodes_count'][season]
         if season < 1 or season > self.data['seasons_count']:
             # TODO Make new custom exception for incorrect season number and realize it
             return
@@ -94,9 +97,9 @@ class Download:
             raise EpisodeNumberIsOutOfRange
 
         for i in range(start, end + 1):
-            self.download_episode(season, i, True)
+            self.download_episode(season, i)
 
-    def download_episode(self, season, episode, multi_download=False):
+    def download_episode(self, season, episode):
         if self.data['type'] == 'movie':
             return
         if season > self.data['seasons_count']:
@@ -108,7 +111,7 @@ class Download:
         data = {
             'id': self.data['data-id'],
             'translator_id': self.translator_id,
-            'favs': self.favs,
+            # 'favs': self.favs,
             'season': season,
             'episode': episode,
             'action': 'get_stream',
@@ -116,6 +119,8 @@ class Download:
         }
         
         print(episode)
+        History().run_episode = episode
+
         stream_url = GetStream().get_series_stream(data)
         downloaded_folder = self.name
         if self.dorl != "pls":
@@ -142,7 +147,6 @@ class Download:
         }
 
         stream_url = GetStream().get_movie_stream(data)
-        mp4 = "mp4"
         # TODO Fix file name bug
         # file_name = f"test.mp4"
 
@@ -153,31 +157,33 @@ class Download:
 
         self.__download(download_data)
 
-    def __download(self, download_data):
+    @staticmethod
+    def __download( download_data):
         if download_data['stream_url']:
             print (download_data['file_name'])
-            if self.dorl == "pls":
-                self.filee.write(download_data['stream_url'] + "\n")
+            # if self.dorl == "pls":
+            #     self.filee.write(download_data['stream_url'] + "\n")
 
-                if self.data['type'] == 'movie':
-                    os.system(f"bomi {download_data['stream_url']}")
-            else:
-                History().status = "run"
-                fullpath = path.join(path.curdir, download_data['file_name'])
+            #     if self.data['type'] == 'movie':
+            #         os.system(f"bomi {download_data['stream_url']}")
+            # else:
+            History().status = "run"
+            fullpath = path.join(path.curdir, download_data['file_name'])
 
-                with Request().get(download_data['stream_url'], stream=True) as r, open(fullpath, "wb") as f, tqdm(
-                        unit="B",
-                        unit_scale=True,
-                        unit_divisor=1024,
-                        total=int(r.headers.get('content-length', 0)),
-                        file=sys.stdout,
-                        desc=download_data['file_name']
-                ) as progress:
-                    for chunk in r.iter_content(chunk_size=4096):
-                        if chunk:
-                            datasize = f.write(chunk)
-                            progress.update(datasize)
-            History().status = "end"
+            with Request().get(download_data['stream_url'], stream=True) as r, open(fullpath, "wb") as f, tqdm(
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    total=int(r.headers.get('content-length', 0)),
+                    file=sys.stdout,
+                    desc=download_data['file_name']
+            ) as progress:
+                for chunk in r.iter_content(chunk_size=4096):
+                    if chunk:
+                        datasize = f.write(chunk)
+                        progress.update(datasize)
+            History().run_episode = History().run_episode + 1
+            
 
     def convert_to_pls(self):
         file_name = self.filee.name
@@ -190,7 +196,7 @@ class Download:
                 f.write(f"File{i+1}={url}\n")
                 f.write(f"Title{i+1}=Track {i+1}\n")
             print(f'Pls len: {len(url_list)}')
-            print(self.all)
+            print(self.download_data['allepisodes'])
             f.write(f"NumberOfEntries={len(url_list)}\n")
             f.write("Version=2\n")
 
