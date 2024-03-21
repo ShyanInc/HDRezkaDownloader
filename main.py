@@ -22,13 +22,11 @@ download_data = movie_info.get_data()
 print (f'\n{download_data}\n')
 
 if 0:
-    dorl = input('PLS?')
     quality = input("Введите качество: ")
 else:
-    dorl = "d"
     quality = "1080"
 
-downloader = Download(download_data, dorl, quality)
+downloader = Download(download_data, quality)
 
 print(movie_info)
 
@@ -84,6 +82,5 @@ else:
         print('Скачивание успешно завершено!')
     else:
         print('Неверный тип скачивания!')
-    if dorl == "pls":
-         downloader.convert_to_pls()
+
     History().status = "end"

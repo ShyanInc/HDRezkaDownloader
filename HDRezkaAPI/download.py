@@ -1,7 +1,5 @@
 import sys
-import os
 from os import path
-from bs4 import BeautifulSoup
 from .request import Request
 from .get_stream import GetStream
 from .history import  History
@@ -24,22 +22,18 @@ class EpisodeNumberIsOutOfRange(Error):
 
 
 class Download:
-    def __init__(self, download_data, dorl, quality):
+    def __init__(self, download_data, quality):
         self.data = download_data
         self.quality = quality
-        self.dorl = dorl
         self.url = download_data['url']
-        response = Request().get(self.url)
-        self.soup = BeautifulSoup(response.content, 'html.parser')
-        # self.favs = self.soup.find('input', id='ctrl_favs').get('value')
         self.name = download_data['url'].split('/')[-1].split('.')[0]
 
-        if self.dorl == "pls":
-            self.filee = open(f"{self.name}.list", "w")
         if self.data['translations_list']:
             self.translator_id = self.__get_translation()
-            # if download_data["seasons_episodes_count"] == 0:
-            #     self.translator_id = self.__get_translation()
+            if download_data.get("seasons_episodes_count") == 0:
+                # If there are no seasons and episodes 
+                print("select again:")
+                self.translator_id = self.__get_translation()
         else:
             self.translator_id = self.__detect_translation()
 
@@ -89,9 +83,8 @@ class Download:
             # TODO Make new custom exception for incorrect season number and realize it
             return
 
-        episodes_list = self.soup.find(
-            'ul', id=f'simple-episodes-list-{season}')
-        episodes_count = len(episodes_list.findAll('li'))
+        episodes_count = self.data['seasons_episodes_count'][season]
+
 
         if end > episodes_count or start < 0:
             raise EpisodeNumberIsOutOfRange
@@ -123,8 +116,6 @@ class Download:
 
         stream_url = GetStream().get_series_stream(data)
         downloaded_folder = self.name
-        if self.dorl != "pls":
-            os.makedirs(downloaded_folder, exist_ok=True)
         season = str(season).zfill(2)
         episode = str(episode).zfill(2)
         file_name = f"{downloaded_folder}/s{season}e{episode}.mp4"
@@ -148,7 +139,6 @@ class Download:
 
         stream_url = GetStream().get_movie_stream(data)
         # TODO Fix file name bug
-        # file_name = f"test.mp4"
 
         download_data = {
             'stream_url': stream_url,
@@ -161,12 +151,6 @@ class Download:
     def __download( download_data):
         if download_data['stream_url']:
             print (download_data['file_name'])
-            # if self.dorl == "pls":
-            #     self.filee.write(download_data['stream_url'] + "\n")
-
-            #     if self.data['type'] == 'movie':
-            #         os.system(f"bomi {download_data['stream_url']}")
-            # else:
             History().status = "run"
             fullpath = path.join(path.curdir, download_data['file_name'])
 
@@ -212,13 +196,13 @@ class Download:
 
         return translation_id
 
-    def __detect_translation(self):
-        if self.data['type'] == 'movie':
-            event_type = 'initCDNMoviesEvents'
-        else:
-            event_type = 'initCDNSeriesEvents'
+    # def __detect_translation(self):
+    #     if self.data['type'] == 'movie':
+    #         event_type = 'initCDNMoviesEvents'
+    #     else:
+    #         event_type = 'initCDNSeriesEvents'
 
-        tmp = str(self.soup).split(f"sof.tv.{event_type}")[-1].split("{")[0]
-        translator_id = tmp.split(",")[1].strip()
+    #     tmp = str(self.soup).split(f"sof.tv.{event_type}")[-1].split("{")[0]
+    #     translator_id = tmp.split(",")[1].strip()
 
-        return translator_id
+    #     return translator_id
