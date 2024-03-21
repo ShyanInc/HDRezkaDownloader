@@ -1,5 +1,5 @@
 import sys
-from os import path
+import  os
 from .request import Request
 from .get_stream import GetStream
 from .history import  History
@@ -115,7 +115,10 @@ class Download:
         History().run_episode = episode
 
         stream_url = GetStream().get_series_stream(data)
-        downloaded_folder = self.name
+        downloaded_folder = f"../{self.name}"
+        # downloaded_folder = self.name
+        os.makedirs(downloaded_folder, exist_ok=True)
+
         season = str(season).zfill(2)
         episode = str(episode).zfill(2)
         file_name = f"{downloaded_folder}/s{season}e{episode}.mp4"
@@ -152,7 +155,7 @@ class Download:
         if download_data['stream_url']:
             print (download_data['file_name'])
             History().status = "run"
-            fullpath = path.join(path.curdir, download_data['file_name'])
+            fullpath = os.path.join(os.path.curdir, download_data['file_name'])
 
             with Request().get(download_data['stream_url'], stream=True) as r, open(fullpath, "wb") as f, tqdm(
                     unit="B",
