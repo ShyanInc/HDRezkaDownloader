@@ -27,8 +27,7 @@ class GetStream:
                           'Попробуйте скачать используя VPN!')
                     exit(0)
                 arr = self.decode_url(r['url'], separator="//_//").split(",")
-                # TODO Make quality select
-                stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                stream_url = self.quality_select(arr, data['quality'])
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
                 print('Decoding error, trying again!')
@@ -50,13 +49,36 @@ class GetStream:
             try:
                 arr = self.decode_url(encoded_stream_url,
                                       separator="\/\/_\/\/").split(",")
-                # TODO Make quality select
-                stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                # stream_url = arr[-1][arr[-1].find("or") + 3:len(arr[-1])]
+                stream_url = self.quality_select(arr, data['quality'])
                 decoded = True
             except (UnicodeDecodeError, BinasciiError):
                 print('Decoding error, trying again!')
 
         return stream_url
+    
+    @staticmethod
+    def quality_select(stream_list, quality):
+        resolutions_and_urls = []
+        for item in stream_list:
+            resolution, url = item.split("]")
+            if url.endswith(".mp4"):
+                resolutions_and_urls.append((resolution + "]", url.split(" or ")[1]))
+
+        selected_index = -2
+        if len(quality) > 2:
+            for index, item in enumerate(stream_list):
+                if quality in item:
+                    selected_index = index
+                    break
+
+        # if selected_index == -1:
+        #     raise ValueError("Quality not found or invalid")
+
+        stream_url = resolutions_and_urls[selected_index][1]
+        print(resolutions_and_urls[selected_index][0], "\n")
+        return stream_url
+
 
     @staticmethod
     def decode_url(data, separator):

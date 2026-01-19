@@ -16,13 +16,19 @@ class MovieInfo:
         info = self.get_data()
         if info['type'] == 'movie':
             s += f'Фильм | {info["name"]}\n'
+        elif info['type'] == 'Аниме':
+            s += f'Аниме | {info["name"]}\nКоличество сезонов: {info["seasons_count"]}\n'
+            s += f'Количество сеp: {info["seasons_episodes_count"]}\n'
+            s += f'Количество сеp all: {info["allepisodes"]}\n'
+            
         else:
             s += f'Сериал | {info["name"]}\nКоличество сезонов: {info["seasons_count"]}\n'
+            s += f'Количество сеp: {info["seasons_episodes_count"]}\n'
+            s += f'Количество сеp all: {info["allepisodes"]}\n'
+
         s += f'Год выпуска: {info["year"]}\n' \
              f'Страна:{info["country"]}\n' \
              f'Длительность: {info["duration"]}\n' \
-             f'Рейтинг IMDb - {info["rating"]["imdb"]}\n' \
-             f'Рейтинг Кинопоиск - {info["rating"]["kp"]}\n' \
              f'Жанр:'
         for i in info['genre']:
             s += f' {i}'
@@ -37,6 +43,10 @@ class MovieInfo:
             return self.series_info()
         elif 'films' in self.url:
             return self.movie_info()
+        elif 'cartoons' in self.url:
+            return self.series_info()
+        elif 'animation' in self.url:
+            return self.series_info()
         else:
             return 'Wrong link!'
 
@@ -45,6 +55,7 @@ class MovieInfo:
             'type': 'series',
             'name': self.data['name'],
             'year': self.data['info']['year'],
+            'allepisodes': 0,
             'country': self.data['info']['country'],
             'seasons_count': len(self.soup.select('#simple-seasons-tabs > li')),
             'rating': {
@@ -62,13 +73,17 @@ class MovieInfo:
         data.update({'rating': rating})
 
         episodes_count = {}
+        allepisodes = 0
 
         for i in range(1, data['seasons_count'] + 1):
             counter = len(self.soup.select(f'#simple-episodes-list-{i} > li'))
             episodes_count.update({i: counter})
+            allepisodes += counter
+
 
         data.update({'seasons_episodes_count': episodes_count})
 
+        data.update({'allepisodes': allepisodes})
         return data
 
     def movie_info(self):
